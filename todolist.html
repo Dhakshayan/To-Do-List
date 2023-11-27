@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      min-width: 250px;
+      font-family: Arial, sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    ul {
+      margin: 0;
+      padding: 0;
+    }
+    ul li {
+      cursor: pointer;
+      position: relative;
+      padding: 12px 8px 12px 40px;
+      list-style-type: none;
+      background: #eee;
+      font-size: 18px;
+      transition: 0.2s;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    ul li:nth-child(odd) {
+      background: #f9f9f9;
+    }
+    ul li:hover {
+      background: #ddd;
+    }
+    ul li.checked {
+      background: #888;
+      color: #fff;
+      text-decoration: line-through;
+    }
+    ul li.checked::before {
+      content: '';
+      position: absolute;
+      border-color: #fff;
+      border-style: solid;
+      border-width: 0 2px 2px 0;
+      top: 10px;
+      left: 16px;
+      transform: rotate(45deg);
+      height: 15px;
+      width: 7px;
+    }
+    .close {
+      position: absolute;
+      right: 0;
+      top: 0;
+      padding: 12px 16px 12px 16px;
+      cursor: pointer;
+    }
+    .close:hover {
+      background-color: #f44336;
+      color: white;
+    }
+    .header {
+      padding: 30px 0;
+      color: white;
+      text-align: center;
+      background: linear-gradient(to right, #FFD700, #FFA500, #FF4500);
+      background-size: 300% 100%;
+      animation: gradientAnimation 10s linear infinite;
+      overflow: hidden;
+    }
+    @keyframes gradientAnimation {
+      0% {
+        background-position: 100% 0;
+      }
+      50% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: -100% 0;
+      }
+    }
+    .header h2 {
+      margin: 5px;
+    }
+    .header:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+    input {
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      width: 60%;
+      padding: 10px;
+      float: left;
+      font-size: 16px;
+    }
+    .addBtn, .addTimedBtn {
+      padding: 10px;
+      width: 13%;
+      background: #d9d9d9;
+      color: #555;
+      float: left;
+      text-align: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      border-radius: 0;
+    }
+    .addBtn:hover, .addTimedBtn:hover {
+      background-color: #bbb;
+    }
+  </style>
+</head>
+<body>
+    <div id="myDIV" class="header">
+    <h1 style="font-size:70 ;">To Do List</h1>
+    <input type="text" id="myInput" placeholder="Add New Task Here">
+    <span onclick="newElement()" class="addBtn">Add</span>
+    <span onclick="newTimedElement()" class="addTimedBtn">Add Timed Task</span>
+  </div>
+  <ul id="myUL"></ul>
+  <script>
+    var myNodelist = document.getElementsByTagName("LI");
+var i;
+for (i = 0; i < myNodelist.length; i++) {
+  var span = document.createElement("SPAN");
+  var txt = document.createTextNode("\u00D7");
+  span.className = "close";
+  span.appendChild(txt);
+  myNodelist[i].appendChild(span);
+}
+var close = document.getElementsByClassName("close");
+var i;
+for (i = 0; i < close.length; i++) {
+  close[i].onclick = function() {
+    var div = this.parentElement;
+    div.style.display = "none";
+  }
+}
+var list = document.querySelector('ul');
+list.addEventListener('click', function(ev) {
+  if (ev.target.tagName === 'LI') {
+    var li = ev.target;
+    li.classList.toggle('checked');
+    if (li.classList.contains('checked')) {
+      clearInterval(li.timerInterval);
+      li.innerHTML = li.innerHTML.split(" ")[0];
+    }
+  }
+}, false);
+function newElement() {
+  var inputValue = document.getElementById("myInput").value;
+  if (inputValue === '') {
+    alert("Task not added. You must provide a task name!");
+    return;
+  }
+  var li = document.createElement("li");
+  li.innerHTML = inputValue;
+  document.getElementById("myUL").appendChild(li);
+  document.getElementById("myInput").value = "";
+}
+function newTimedElement() {
+  var inputValue = document.getElementById("myInput").value;
+  if (inputValue === '') {
+    alert("Task not added. You must provide a task name!");
+    return;
+  }
+  var timeInput = prompt("Enter the time limit for the task (in MM:SS format):");
+  if (timeInput === null) {
+    return;
+  }
+  var timeArray = timeInput.split(":");
+  var minutes = parseInt(timeArray[0], 10);
+  var seconds = parseInt(timeArray[1], 10);
+  if (isNaN(minutes) || isNaN(seconds)) {
+    alert("Invalid time format. Please use MM:SS format.");
+    return;
+  }
+  var li = document.createElement("li");
+  li.innerHTML = inputValue + " (" + formatTime(minutes, seconds) + ")";
+  document.getElementById("myUL").appendChild(li);
+  startTimer(li, minutes * 60 + seconds);
+  document.getElementById("myInput").value = "";
+}
+function startTimer(li, timeLeft) {
+  li.timerInterval = setInterval(function() {
+    if (timeLeft <= 0) {
+      clearInterval(li.timerInterval);
+      if (!li.classList.contains('checked')) {
+        li.style.color = "red"; 
+        li.querySelector(".close").style.display = "none"; 
+        li.innerHTML += " (Time's Up!)";
+      }
+    } else {
+      timeLeft--;
+      var timeDisplay = timeLeft > 0 ? formatTime(Math.floor(timeLeft / 60), timeLeft % 60) : "Time's up!";
+      li.innerHTML = li.innerHTML.split(" ")[0] + " (" + timeDisplay + ")";
+    }
+  }, 1000);
+}
+function formatTime(minutes, seconds) {
+  return (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+}
+    function newElement() {
+      var inputValue = document.getElementById("myInput").value;
+      if (inputValue === '') {
+        alert("Task not added. You must provide a task name!");
+        return;
+      }
+      var li = document.createElement("li");
+      li.innerHTML = inputValue;
+      addCloseButton(li);
+      document.getElementById("myUL").appendChild(li);
+      document.getElementById("myInput").value = "";
+    }
+    function newTimedElement() {
+      var inputValue = document.getElementById("myInput").value;
+      if (inputValue === '') {
+        alert("Task not added. You must provide a task name!");
+        return;
+      }
+      var timeInput = prompt("Enter the time limit for the task (in MM:SS format):");
+      if (timeInput === null) {
+        return;
+      }
+      var timeArray = timeInput.split(":");
+      var minutes = parseInt(timeArray[0], 10);
+      var seconds = parseInt(timeArray[1], 10);
+      if (isNaN(minutes) || isNaN(seconds)) {
+        alert("Invalid time format. Please use MM:SS format.");
+        return;
+      }
+      var li = document.createElement("li");
+      li.innerHTML = inputValue + " (" + formatTime(minutes, seconds) + ")";
+      addCloseButton(li);
+      document.getElementById("myUL").appendChild(li);
+      startTimer(li, minutes * 60 + seconds);
+      document.getElementById("myInput").value = "";
+    }
+    function addCloseButton(li) {
+      var span = document.createElement("SPAN");
+      var txt = document.createTextNode("\u00D7");
+      span.className = "close";
+      span.appendChild(txt);
+      span.onclick = function() {
+        var div = this.parentElement;
+        div.style.display = "none";
+      };
+      li.appendChild(span);
+    }
+    function startTimer(li, timeLeft) {
+      li.timerInterval = setInterval(function() {
+        if (timeLeft <= 0) {
+          clearInterval(li.timerInterval);
+          if (!li.classList.contains('checked')) {
+            li.style.color = "red";
+            li.querySelector(".close").style.display = "none";
+            li.innerHTML += " (Time's Up!)";
+          }
+        } else {
+          timeLeft--;
+          var timeDisplay = timeLeft > 0 ? formatTime(Math.floor(timeLeft / 60), timeLeft % 60) : "Time's up!";
+          li.innerHTML = li.innerHTML.split(" ")[0] + " (" + timeDisplay + ")";
+        }
+      }, 1000);
+    }
+    function formatTime(minutes, seconds) {
+      return (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+  </script>
+</body>
+</html>
